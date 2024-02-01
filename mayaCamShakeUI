@@ -1,0 +1,56 @@
+import maya.cmds as cmds
+import random
+
+# Function to add camera shake
+def add_continuous_camera_shake(camera_name, duration, intensity, frequency_range):
+    num_keyframes = cmds.keyframe(camera_name, query=True, attribute=['translateX', 'translateY', 'translateZ'], keyframeCount=True)
+
+    if num_keyframes < 2:
+        cmds.warning("The selected camera has less than 2 keyframes. Camera shake cannot be applied.")
+        return
+
+    for frame in range(1, duration + 1):
+        # Check if the current frame is within the frequency range
+        if frame % random.randint(frequency_range[0], frequency_range[1]) == 0:
+            random_translation = [random.uniform(-intensity, intensity) for _ in range(3)]
+            animated_frame = frame % num_keyframes if frame % num_keyframes != 0 else num_keyframes
+            
+            for axis, translation in zip(['X', 'Y', 'Z'], random_translation):
+                current_translation = cmds.keyframe(camera_name, query=True, attribute='translate' + axis, time=(animated_frame, animated_frame))
+
+                if current_translation:
+                    new_translation = current_translation[0] + translation
+                    cmds.setKeyframe(camera_name, attribute='translate' + axis, time=(animated_frame, animated_frame), value=new_translation)
+
+# Function to create the UI window
+def create_camera_shake_ui():
+    if cmds.window("cameraShakeUI", exists=True):
+        cmds.deleteUI("cameraShakeUI", window=True)
+    
+    cmds.window("cameraShakeUI", title="Camera Shake Settings", widthHeight=(300, 150))
+    cmds.columnLayout(adjustableColumn=True)
+    
+    # Duration slider
+    cmds.text(label="Shake Duration:")
+    duration_slider = cmds.intSliderGrp(label="Frames", field=True, minValue=1, maxValue=500, value=120)
+    
+    # Intensity slider
+    cmds.text(label="Shake Intensity:")
+    intensity_slider = cmds.floatSliderGrp(label="Intensity", field=True, minValue=0.1, maxValue=5.0, value=1.0)
+    
+    # Apply button
+    cmds.button(label="Apply Shake", command=lambda *args: apply_camera_shake(duration_slider, intensity_slider))
+    
+    cmds.showWindow("cameraShakeUI")
+
+# Function to apply camera shake using UI settings
+def apply_camera_shake(duration_slider, intensity_slider):
+    camera_name = "camera1"  # Change to your camera's name
+    duration = cmds.intSliderGrp(duration_slider, query=True, value=True)
+    intensity = cmds.floatSliderGrp(intensity_slider, query=True, value=True)
+    frequency_range = (3, 10)  # Frequency range for the shake (between 3 and 10 frames)
+    
+    add_continuous_camera_shake(camera_name, duration, intensity, frequency_range)
+
+# Create the UI window
+create_camera_shake_ui()
