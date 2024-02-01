@@ -1,5 +1,5 @@
 # MayaCamShake
-Python script to add camera shake to an animated camera move
+Python script to add camera shake to an animated camera move with UI sliders for frequency and intensity
 
 Change "camera1" on line 27 to the name of the renderable camera in your scene if you are not using the default camera
 
