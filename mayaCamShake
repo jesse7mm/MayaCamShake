@@ -1,0 +1,33 @@
+import maya.cmds as cmds
+import random
+
+def add_camera_shake_to_animated_camera(camera_name, duration, intensity):
+    # Get the number of keyframes on the camera's translation attributes
+    num_keyframes = cmds.keyframe(camera_name, query=True, attribute=['translateX', 'translateY', 'translateZ'], keyframeCount=True)
+    
+    if num_keyframes < 2:
+        cmds.warning("The selected camera has less than 2 keyframes. Camera shake cannot be applied.")
+        return
+    
+    # Iterate through the keyframes and add camera shake to each keyframe
+    for frame in range(1, duration + 1):
+        random_translation = [random.uniform(-intensity, intensity) for _ in range(3)]
+        
+        # Calculate the corresponding frame for the animated camera
+        animated_frame = frame % num_keyframes if frame % num_keyframes != 0 else num_keyframes
+        
+        # Add random translation to the camera's position at the current keyframe
+        for axis, translation in zip(['X', 'Y', 'Z'], random_translation):
+            current_translation = cmds.keyframe(camera_name, query=True, attribute='translate' + axis, time=(animated_frame, animated_frame))
+            new_translation = current_translation[0] + translation
+            cmds.setKeyframe(camera_name, attribute='translate' + axis, time=(animated_frame, animated_frame), value=new_translation)
+
+# Set the camera name (change to your camera's name)
+camera_name = "your_animated_camera"
+
+# Set the duration and intensity of the camera shake
+duration = 60  # Number of frames for the shake
+intensity = 1.0  # Maximum translation in any direction
+
+# Call the function to add camera shake to the animated camera
+add_camera_shake_to_animated_camera(camera_name, duration, intensity)
